@@ -10,7 +10,7 @@ import config
 from sessionutil import invalidate_session
 
 
-def login():
+def discord_login():
     ss = get_creds()
     params = {
         "client_id": ss["client_id"],
@@ -108,7 +108,7 @@ def fetch_discord_user():
     discord_full_username = None
     discord_id = None
     try:
-        logging.debug("response: %s" % response.text)
+        logging.debug("fetch_discord_user response: %s" % response.text)
         parsed_response = json.loads(response.text)
         discord_avatar_url = "%s/avatars/%s/%s.png" % (
             config.DISCORD_CDN_URL,

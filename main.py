@@ -6,6 +6,7 @@ from flask_session import Session
 import config
 from creds import get_creds
 import discordutil
+import twitchutil
 from sessionutil import invalidate_session
 
 
@@ -42,15 +43,17 @@ def home():
     return render_template("home.html", wsurl=config.MY_WS_URL)
 
 
-app.add_url_rule("/login", view_func=discordutil.login)
+app.add_url_rule("/login", view_func=discordutil.discord_login)
 app.add_url_rule("/api/ident/cb", view_func=discordutil.discord_login_cb)
+app.add_url_rule("/logintwitch", view_func=twitchutil.twitch_login)
+app.add_url_rule("/api/ident/twitchcb",
+    view_func=twitchutil.twitch_login_cb)
 
 
 @app.route("/logout")
 def logout():
     invalidate_session()
     return redirect("/")
-
 
 
 def is_authorized():

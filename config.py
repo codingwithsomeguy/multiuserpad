@@ -14,6 +14,8 @@ CREDENTIALS_URL = "http://127.0.0.1:5678/sec.json"
 DISCORD_API_URL = "https://discordapp.com/api"
 DISCORD_CDN_URL = "https://cdn.discordapp.com"
 
+TWITCH_API_URL = "https://id.twitch.tv"
+
 CODE_DIR = "/tmp/learnas"
 CODE_EXTENSION = "c"
 #CODE_EXTENSION = "py"
