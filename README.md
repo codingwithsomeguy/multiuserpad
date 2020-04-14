@@ -6,10 +6,10 @@ _(I hope you're worried running this, when it breaks, you get to keep both piece
 
 multiuserpad is primarily a collaboration and learning tool for group text
 and development.  It was originally built for live learning / hack sessions
-for [codingwithsomeguy.com](codingwithsomeguy.com), but we'll see where it
+for [codingwithsomeguy.com](https://codingwithsomeguy.com), but we'll see where it
 goes from there.
 
-multiuserpad is live coded primarily on [SomeCodingGuy's twitch](twitch.tv/SomeCodingGuy).  Come join us to help advance this!
+multiuserpad is live coded primarily on [SomeCodingGuy's twitch](https://twitch.tv/SomeCodingGuy).  Come join us to help advance this!
 
 At the moment, multiuserpad uses the CodeMirror textarea editor.
 
