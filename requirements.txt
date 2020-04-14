@@ -1,0 +1,5 @@
+Flask
+Flask-Session
+websockets
+requests
+redis

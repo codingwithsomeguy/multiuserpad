@@ -1,0 +1,278 @@
+<html>
+<head>
+<title>multiuserpad</title>
+<link rel="stylesheet" href="/static/lib/codemirror.css">
+<link rel="stylesheet" href="/static/theme/bespin.css">
+<link rel="stylesheet" href="/static/theme/the-matrix.css">
+<link rel="stylesheet" href="/static/theme/cobalt.css">
+<link rel="stylesheet" href="/static/theme/solarized.css">
+<link rel="stylesheet" href="/static/theme/tomorrow-night-bright.css">
+<link rel="stylesheet" href="/static/theme/gruvbox-dark.css">
+<script src="/static/lib/codemirror.js"></script>
+<script src="/static/mode/javascript/javascript.js"></script>
+<script src="/static/mode/clike/clike.js"></script>
+<script src="/static/mode/python/python.js"></script>
+<script src="/static/mode/javascript/javascript.js"></script>
+
+<style>
+body {
+    background-color: #333;
+}
+
+.hdrtitle {
+    color: #FFF;
+    font-weight: bold;
+}
+
+.hdrspacer {
+    width:100px;
+    display:inline-block;
+}
+
+.hdrprofile {
+    display:inline-block;
+    background-color: #CCC;
+}
+
+.hdrprofile img {
+    vertical-align:bottom;
+}
+
+.divcontent {
+    width: 1150px;
+    /* height:650px; */
+    height:450px;
+}
+
+.divoutput {
+    display:inline-block; width:300px; vertical-align:top;
+}
+
+.divoutput textarea {
+    color: #d7d4f0;
+    background-color: black;
+    width:100%;
+    height: 100%;
+    font-family: monospace;
+    font-size:16px;
+}
+
+.diveditor {
+    display:inline-block;
+    font-size: 18px;
+}
+</style>
+<script>
+const extToSyntaxModeName = {
+    "py": {"dropdownValue": "python", "syntaxMode": "python"},
+    "js": {"dropdownValue": "javascript", "syntaxMode": "javascript"},
+    "c": {"dropdownValue": "c", "syntaxMode": "text/x-csrc"}
+};
+
+function setInitialDropdownSelection() {
+    //<select id="language" onchange="doLanguage()">
+    const extension = "{{ lenv["extension"] }}";
+    const languageElem = document.getElementById("language");
+    //const newMode = languageElem.value.toLowerCase();
+    if (extension in extToSyntaxModeName) {
+        const dropdownValue = extToSyntaxModeName[extension]["dropdownValue"]
+        console.log("setting initial dropdown language to " +
+            extension + ", val: " + dropdownValue);
+
+        let foundName = "python";
+        for (let elemIndex in languageElem.children) {
+            const elem = languageElem.children[elemIndex];
+            if (elem.value === dropdownValue) {
+                //console.log("found it!");
+                // TODO: for now, just set the value on parent
+                languageElem.value = dropdownValue;
+                break;
+            }
+        }
+    }
+
+}
+
+function init() {
+    const outputElem = document.getElementById("output");
+    outputElem.value = "Output:\n";
+    // TODO(race): make sure the editor is ready
+    doLoad();
+    // also make sure the dropdown and highlighting match
+    setInitialDropdownSelection();
+}
+</script>
+</head>
+<body onload="init()">
+
+<script>
+function doLoad() {
+    const req = new Request("/load", {});
+    fetch(req).then(response => response.text()).then(x => {
+        editor.off("change", handleChange);
+        editor.setValue(x);
+        editor.on("change", handleChange);
+    });
+}
+
+function doAutosave() {
+    console.log("doAutosave: invoked");
+    const codeText = editor.getValue();
+    const req = new Request("/autosave", {
+        method: "POST",
+        body: codeText
+    });
+    fetch(req).then(response => response.text()).then(x => console.log(x));
+}
+
+function addOutputLine(src) {
+    const outputElem = document.getElementById("output");
+    outputElem.value += "> " + src;
+    outputElem.scrollTop = outputElem.scrollHeight - outputElem.clientHeight;
+}
+
+function doExecute() {
+    const codeText = editor.getValue();
+    const req = new Request("/execute", {
+        method: "POST",
+        body: codeText
+    });
+    fetch(req).then(response => response.text()).then(x => {
+        addOutputLine(x);
+        const messageObj = {
+            "action": "output",
+            "content": x
+        };
+        ws.send(JSON.stringify(messageObj));
+    });
+}
+
+function doLanguage() {
+    const languageElem = document.getElementById("language");
+    // TODO: refactor to extToSyntaxModeName
+    const loadedModes = {
+        "python": "python",
+        "javascript": "javascript",
+        "c": "text/x-csrc"
+        
+    };
+    const newMode = languageElem.value.toLowerCase();
+    if (newMode in loadedModes) {
+        editor.setOption("mode", loadedModes[newMode]);
+    }
+}
+</script>
+<span class="hdrtitle">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABnlBMVEUAAAAEBAAFBQEBAQAMCwECBAMECgYBAwIICAE1MAYYFgMDAwAxLgUREAICAgABAgEIFA0SLx4FDgkrJwQiHwQaGAMjIARLRQgbGAM8Nwc5NQYyLgUODAECBgQIFg4LHBMYPigSLh4GBgE3MwYVEwIdGwNXUAo2MgZHQQhAOgceGwM0MAVUTQk8NwYHEAoXOSYKGxIHEgwKGhECBQMlIgQSEAIQDwITEgIJCAEWFAI7NgYAAQENDAEgHQMBAQMGBwkYHCQDBAUBAQEDAwQEBAUmLTkNEBQHCAsHCQsCAgMMDhI3QVMoMD0tNEM2QFIvOEcPEhcvN0crM0EsNEMxOkofJC4KDBAiKDMkKzceIy4dIy0dIiwRExkICgwOERYjKTQjKTUFBggEAwMDAwIKCggeHBkHBgY1MSstKiQSEQ81MisTEg9KRTwiIBseHBgoJSErKCMDAgI0MCoNDAsNDApTTkQkIh0uKyVdV0stKiVhW08oJiEwLSdRTEIDAwM0MSsXFhMjIR0XFRMaGBUYFxQUEhAKCQgODQwCAgL///+1t0JKAAAAAWJLR0SJHGEmzAAAAAd0SU1FB+QEDRALOwgyHrYAAAC+SURBVBiVY2TAAhhxCDIy/mNgZvz/FyLAysj4k5GBg5HxGwM3UIb5E1CMn5GR8R0jg/D3n4KMMPCZD0g8Y1SC8T8KgKlr2kCCWZ2LkfGMKeMJBsvfbBf/mBxFtd2G8fgfTCfZ/T2KJGjPyLjfCWr0dpigFyMCrIYJhoG5T2RB5AIMbzrJv9iOJOik8IBhX/L9fUlMc6CCqYx3VOGGToAIFiLZw/i/BSJYx/iL/ScHSAQYYndh2jt27SMqkDEBAFLfLk9mMEZgAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA0LTEzVDIwOjExOjU5LTA0OjAwAPtbDwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNC0xM1QyMDoxMTo1OS0wNDowMHGm47MAAAAASUVORK5CYII=" alt="CSG Learn">
+</span>
+<select id="language" onchange="doLanguage()">
+    <option value="python">Python</option>
+    <option value="javascript">Javascript</option>
+    <option value="c">C</option>
+</select>
+<button onclick="doAutosave()">Save</button>
+<button onclick="doExecute()">Execute</button>
+
+<span class="hdrspacer"></span>
+
+<div class="hdrprofile">
+<img src="{{ profile['avatar_url'] }}" alt="avatar url" width="24px">
+{{ profile['full_username'] }}
+<button onclick="window.location.href='/logout';">Logout</button>
+</div>
+
+<div class="divcontent">
+<div width="100%" style="background-color:black;">
+<center>
+<img id="whiteboard" src="/static/wb.png" width="711px" height="400px" alt="whiteboard">
+<script>
+const whiteboardElem = document.getElementById("whiteboard");
+function reloadWhiteboard() {
+    //console.log("reloadWhiteboard: invoked");
+    whiteboardElem.src = "/static/wb.png?" + new Date().getTime();
+}
+console.log("whiteboard refresh interval: {{ lenv["wbrefresh"] }}");
+setInterval(reloadWhiteboard, {{ lenv["wbrefresh"] }});
+</script>
+</center>
+</div>
+
+<div class="divoutput">
+<textarea readonly id="output"></textarea>
+</div>
+
+<div class="diveditor">
+<textarea id="pad"></textarea>
+</div>
+
+</div>
+
+
+<script>
+var ws = new WebSocket("{{wsurl}}");
+const padElem = document.getElementById("pad");
+function getInitialEditorSettings() {
+    const extension = "{{ lenv["extension"] }}";
+    console.log("extension selected: " + extension);
+
+    // TODO: dynamically load the CSS if it's not there, expand this lookup
+
+    let syntaxMode = "python";
+    if (extension in extToSyntaxModeName) {
+        syntaxMode = extToSyntaxModeName[extension]["syntaxMode"];
+    }
+    // TODO: don't race for this
+    const dropdownValue = extToSyntaxModeName[extension]["dropdownValue"];
+
+    const configObj = {
+        lineNumbers: true,
+        mode: syntaxMode,
+        theme: "tomorrow-night-bright", // vote winner (n=3or4/10)
+        indentUnit: 4,
+        tabSize: 4
+    };
+
+    return configObj;
+}
+const editor = CodeMirror.fromTextArea(padElem, getInitialEditorSettings());
+//editor.setSize(75 * 10 + 22, 27 * (20 + 4));
+editor.setSize(75 * 10 + 22 + 70, "100%");
+editor.on("change", handleChange);
+
+ws.onmessage = function (evt) {
+    //console.log(evt);
+    const message = JSON.parse(evt.data);
+    console.log("message:", message);
+
+    // TODO: validate that contents is there
+    if ("action" in message) {
+        if (message["action"] === "edit") {
+            const changeObj = message["contents"];
+
+            // apply the changes
+            editor.off("change", handleChange);
+            editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
+            editor.on("change", handleChange);
+        } else if (message["action"] === "output") {
+            addOutputLine(message["content"]);
+        }
+    }
+};
+
+ws.onopen = function (evt) {
+    //ws.send("JS Client sending something!");
+};
+
+function handleChange(editorInstance, changeObj) {
+    // TODO: make sure the websocket is REALLY open first...
+    var messageObj = {
+        "action": "edit",
+        "contents": changeObj
+    };
+    var message = JSON.stringify(messageObj);
+    ws.send(message);
+}
+
+</script>
+</body>
+</html>
