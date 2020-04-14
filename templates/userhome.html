@@ -93,9 +93,13 @@ function setInitialDropdownSelection() {
 
 }
 
-function init() {
+function resetOutputValue() {
     const outputElem = document.getElementById("output");
     outputElem.value = "Output:\n";
+}
+
+function init() {
+    resetOutputValue();
     // TODO(race): make sure the editor is ready
     doLoad();
     // also make sure the dropdown and highlighting match
@@ -131,12 +135,22 @@ function addOutputLine(src) {
     outputElem.scrollTop = outputElem.scrollHeight - outputElem.clientHeight;
 }
 
+function doClearOutput(evt) {
+    resetOutputValue();
+    const messageObj = {
+        "action": "outputcontrol",
+        "type": "clear"
+    };
+    ws.send(JSON.stringify(messageObj));
+}
+
 function doExecute() {
     const codeText = editor.getValue();
     const req = new Request("/execute", {
         method: "POST",
         body: codeText
     });
+
     fetch(req).then(response => response.text()).then(x => {
         addOutputLine(x);
         const messageObj = {
@@ -198,6 +212,7 @@ setInterval(reloadWhiteboard, {{ lenv["wbrefresh"] }});
 </div>
 
 <div class="divoutput">
+<button onclick="doClearOutput()">Clear Output</button>
 <textarea readonly id="output"></textarea>
 </div>
 
@@ -255,6 +270,8 @@ ws.onmessage = function (evt) {
             editor.on("change", handleChange);
         } else if (message["action"] === "output") {
             addOutputLine(message["content"]);
+        } else if (message["action"] === "outputcontrol") {
+            resetOutputValue();
         }
     }
 };
