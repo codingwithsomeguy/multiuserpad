@@ -1,28 +1,35 @@
-import os, json
+import os
 
-from creds import get_creds
-import discordutil
 from flask import Flask, render_template, request, redirect, session, abort
 from flask_session import Session
+
 import config
+from creds import get_creds
+import discordutil
+from sessionutil import invalidate_session
+
+
+# TODO: use subprocess, check this
+# TODO: capture fd's from subprocess
+KNOWN_EXECUTION_MODELS = {
+    "c": "cd '%s' && gcc '%s' -o webinput -lm && ./webinput",
+    "py": "cd '%s' && python3 '%s'",
+    "js": "cd '%s' && node '%s'"
+}
 
 
 def init_flask():
-    app = Flask(__name__)
+    app_init = Flask(__name__)
 
     ss = get_creds()
-    app.config["SECRET_KEY"] = ss["session_key"]
+    app_init.config["SECRET_KEY"] = ss["session_key"]
 
-    app.config["SESSION_TYPE"] = "redis"
-    Session(app)    # Start the web session
+    app_init.config["SESSION_TYPE"] = "redis"
+    Session(app_init)    # Start the web session
 
-    return app
+    return app_init
 
 
-def invalidate_session():
-    keys_to_delete = [k for k in session.keys()]
-    for k in keys_to_delete:
-        del(session[k])
 
 
 # wsgi (in uwsgi) workaround for "application":
@@ -73,10 +80,10 @@ def user_home():
     if is_authorized():
         # TODO: send users that have discord but are not authorized to signup
         return render_template("userhome.html",
-            wsurl=config.MY_WS_URL, profile=get_profile(),
-            lenv={
-                "extension": config.CODE_EXTENSION,
-                "wbrefresh": config.MY_WHITEBOARD_REFRESH_MS})
+                               wsurl=config.MY_WS_URL, profile=get_profile(),
+                               lenv={
+                                   "extension": config.CODE_EXTENSION,
+                                   "wbrefresh": config.MY_WHITEBOARD_REFRESH_MS})
     else:
         abort(401)
 
@@ -135,13 +142,6 @@ def do_execute():
         temp_filename = do_save(text)
         # TODO: check which env to do based on extension passed in
         #   or the session / need some variables
-        # TODO: use subprocess, check this
-        # TODO: capture fd's from subprocess
-        KNOWN_EXECUTION_MODELS = {
-            "c": "cd '%s' && gcc '%s' -o webinput -lm && ./webinput",
-            "py": "cd '%s' && python3 '%s'",
-            "js": "cd '%s' && node '%s'"
-        }
         selected_model = "py"
         if config.CODE_EXTENSION in KNOWN_EXECUTION_MODELS:
             selected_model = config.CODE_EXTENSION
@@ -164,7 +164,7 @@ def whiteboard_update():
 
 
 @app.errorhandler(401)
-def custom_401(error):
+def custom_401(_):
     return render_template("401.html")
 
 

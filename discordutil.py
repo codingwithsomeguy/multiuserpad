@@ -1,11 +1,13 @@
-import requests
-from urllib.parse import urlencode
 import json
+import logging
+from urllib.parse import urlencode
+
+from flask import redirect, request, session
+import requests
+
 from creds import get_creds
 import config
-from flask import redirect, request, session
-from urllib.parse import urlencode
-import logging
+from sessionutil import invalidate_session
 
 
 def login():
@@ -32,11 +34,11 @@ def discord_login_cb():
     code = request.args.get("code")
     if code is not None:
         result = "Code was %s" % code
-        user_authenticated = fetch_token(code, session)
+        user_authenticated = fetch_token(code)
     if user_authenticated == True:
         #logging.debug("session:", session)
-        discord_user_fetch_worked = fetch_discord_user(session)
-        if discord_user_fetch_worked == False:
+        discord_user_fetch_worked = fetch_discord_user()
+        if not discord_user_fetch_worked:
             invalidate_session()
             return redirect("/")
         return redirect("/user")
@@ -46,7 +48,7 @@ def discord_login_cb():
     return result
 
 
-def fetch_token(code, session):
+def fetch_token(code):
     SS = get_creds()
     result = False
     body_payload = {
@@ -75,13 +77,13 @@ def fetch_token(code, session):
         else:
             logging.warn("NO refresh_token AVAILABLE, BAD AUTH!")
     except ValueError as e:
-        logging.error("ValueError: " + e.message)
+        logging.error("ValueError: " + e)
         result = False
 
     return result
 
 
-def fetch_discord_user(session):
+def fetch_discord_user():
     if "token_response" not in session:
         return False
 
@@ -106,15 +108,16 @@ def fetch_discord_user(session):
     discord_full_username = None
     discord_id = None
     try:
-        logging.debug("response:", response.text)
+        logging.debug("response: %s" % response.text)
         parsed_response = json.loads(response.text)
-        discord_avatar_url = "%s/avatars/%s/%s.png" % (config.DISCORD_CDN_URL,
+        discord_avatar_url = "%s/avatars/%s/%s.png" % (
+            config.DISCORD_CDN_URL,
             parsed_response["id"], parsed_response["avatar"])
         discord_full_username = "%s#%s" % (
             parsed_response["username"], parsed_response["discriminator"])
         discord_id = parsed_response["id"]
     except ValueError as e:
-        logging.error("ValueError: " + e.message)
+        logging.error("ValueError: " + e)
         return False
 
     ss = get_creds()
