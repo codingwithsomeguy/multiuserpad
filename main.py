@@ -172,4 +172,7 @@ def custom_401(_):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=9892)
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=config.MY_WEB_PORT)

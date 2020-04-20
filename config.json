@@ -1,0 +1,25 @@
+{
+    "server": {
+        "web": {
+            "url": "http://127.0.0.1:9892/"
+        },
+        "web_socket": {
+            "url": "ws://127.0.0.1:9893/"
+        }
+    },
+    "parameters": {
+        "whiteboard_refresh_ms": 500,
+        "code_extension": "c",
+        "temporary_code_directory": "/tmp/learnas"
+    },
+    "credentials_url": "http://127.0.0.1:5678/sec.json",
+    "auth": {
+        "discord": {
+            "url": "https://discordapp.com/api",
+            "cdn": "https://cdn.discordapp.com"
+        },
+        "twitch": {
+            "url": "https://id.twitch.tv"
+        }
+    }
+}

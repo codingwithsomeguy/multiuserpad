@@ -1,22 +1,26 @@
-# TODO: move this to json
-#MY_HOST_NAME = "learn.codingwithsomeguy.com"
-MY_HOST_NAME = "127.0.0.1"
-MY_WEB_PORT = 9892
-MY_WS_PORT = 9893
+import json
+from urllib.parse import urlparse, urlunparse
 
-MY_WHITEBOARD_REFRESH_MS = 500
+# TODO: WIP - moving all to config.json
+
+# WIP: temporary bridge json holder
+config = json.load(open("config.json"))
+
+MY_HOST_NAME = urlparse(config["server"]["web"]["url"]).hostname
+MY_WEB_PORT = urlparse(config["server"]["web"]["url"]).port
+MY_WS_PORT = urlparse(config["server"]["web_socket"]["url"]).port
+
+MY_WHITEBOARD_REFRESH_MS = config["parameters"]["whiteboard_refresh_ms"]
+# TODO: just read this, but reassemble with urlunparse
 MY_URL = "http://%s:%d" % (MY_HOST_NAME, MY_WEB_PORT)
 MY_WS_URL = "ws://%s:%d/" % (MY_HOST_NAME, MY_WS_PORT)
 
-#CREDENTIALS_URL = "http://10.0.3.1:5678/sec.json"
-CREDENTIALS_URL = "http://127.0.0.1:5678/sec.json"
+CREDENTIALS_URL = config["credentials_url"]
 
-DISCORD_API_URL = "https://discordapp.com/api"
-DISCORD_CDN_URL = "https://cdn.discordapp.com"
+DISCORD_API_URL = config["auth"]["discord"]["url"]
+DISCORD_CDN_URL = config["auth"]["discord"]["cdn"]
 
-TWITCH_API_URL = "https://id.twitch.tv"
+TWITCH_API_URL = config["auth"]["twitch"]["url"]
 
-CODE_DIR = "/tmp/learnas"
-CODE_EXTENSION = "c"
-#CODE_EXTENSION = "py"
-#CODE_EXTENSION = "js"
+CODE_DIR = config["parameters"]["temporary_code_directory"]
+CODE_EXTENSION = config["parameters"]["code_extension"]
