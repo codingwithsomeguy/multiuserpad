@@ -87,10 +87,14 @@ function doAutosave() {
     fetch(req).then(response => response.text()).then(x => console.log(x));
 }
 
-function addOutputLine(src) {
+function addOutputLine(src, prefix="> ") {
     const outputElem = document.getElementById("output");
-    outputElem.value += "> " + src;
+    outputElem.value += prefix + src;
     outputElem.scrollTop = outputElem.scrollHeight - outputElem.clientHeight;
+}
+
+function addErrorLine(src) {
+    addOutputLine(src, "ERR> ");
 }
 
 function doClearOutput(evt) {
@@ -109,8 +113,11 @@ function doExecute() {
         body: codeText
     });
 
-    fetch(req).then(response => response.text()).then(x => {
-        addOutputLine(x);
+    fetch(req).then(response => response.json()).then(x => {
+        if (x.stderr !== "") {
+            addErrorLine(x.stderr);
+        }
+        addOutputLine(x.stdout);
         const messageObj = {
             "action": "output",
             "content": x

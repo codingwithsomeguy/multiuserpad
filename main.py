@@ -1,4 +1,6 @@
 import os
+import json
+import subprocess
 
 from flask import Flask, render_template, request, redirect, session, abort
 from flask_session import Session
@@ -10,8 +12,6 @@ import twitchutil
 from sessionutil import invalidate_session
 
 
-# TODO: use subprocess, check this
-# TODO: capture fd's from subprocess
 KNOWN_EXECUTION_MODELS = {
     "c": "cd '%s' && gcc '%s' -o webinput -lm && ./webinput",
     "py": "cd '%s' && python3 '%s'",
@@ -143,15 +143,22 @@ def do_execute():
         # TODO: make sure this is text before calling decode!!!
         text = rawdata.decode("utf-8")
         temp_filename = do_save(text)
+        temp_filepart = os.path.split(temp_filename)[1]
         # TODO: check which env to do based on extension passed in
         #   or the session / need some variables
         selected_model = "py"
         if config.CODE_EXTENSION in KNOWN_EXECUTION_MODELS:
             selected_model = config.CODE_EXTENSION
         cmd_pattern = KNOWN_EXECUTION_MODELS[selected_model]
-        cmd = cmd_pattern % (config.CODE_DIR, temp_filename)
-        execution_output = os.popen(cmd, "r").read()
-        return execution_output
+        # assume we're in the same directory
+        cmd = cmd_pattern % (config.CODE_DIR, temp_filepart)
+        sub_pipe = subprocess.Popen(
+            cmd, shell=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sub_pipe_stdout, sub_pipe_stderr = sub_pipe.communicate()
+        return json.dumps({
+            "stdout": sub_pipe_stdout.decode(config.HOST_ENCODING),
+            "stderr": sub_pipe_stderr.decode(config.HOST_ENCODING)})
     abort(401)
 
 
