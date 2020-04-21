@@ -1,6 +1,7 @@
 <html>
 <head>
 <title>multiuserpad</title>
+<!-- CodeMirror CSS + JS -->
 <link rel="stylesheet" href="/static/lib/codemirror.css">
 <link rel="stylesheet" href="/static/theme/bespin.css">
 <link rel="stylesheet" href="/static/theme/the-matrix.css">
@@ -14,54 +15,9 @@
 <script src="/static/mode/python/python.js"></script>
 <script src="/static/mode/javascript/javascript.js"></script>
 
-<style>
-body {
-    background-color: #333;
-}
+<!-- Local styles -->
+<link rel="stylesheet" href="/static/mup.css">
 
-.hdrtitle {
-    color: #FFF;
-    font-weight: bold;
-}
-
-.hdrspacer {
-    width:100px;
-    display:inline-block;
-}
-
-.hdrprofile {
-    display:inline-block;
-    background-color: #CCC;
-}
-
-.hdrprofile img {
-    vertical-align:bottom;
-}
-
-.divcontent {
-    width: 1150px;
-    /* height:650px; */
-    height:450px;
-}
-
-.divoutput {
-    display:inline-block; width:300px; vertical-align:top;
-}
-
-.divoutput textarea {
-    color: #d7d4f0;
-    background-color: black;
-    width:100%;
-    height: 100%;
-    font-family: monospace;
-    font-size:16px;
-}
-
-.diveditor {
-    display:inline-block;
-    font-size: 18px;
-}
-</style>
 <script>
 const extToSyntaxModeName = {
     "py": {"dropdownValue": "python", "syntaxMode": "python"},
@@ -71,7 +27,7 @@ const extToSyntaxModeName = {
 
 function setInitialDropdownSelection() {
     //<select id="language" onchange="doLanguage()">
-    const extension = "{{ lenv["extension"] }}";
+    const extension = '{{ lenv["extension"] }}';
     const languageElem = document.getElementById("language");
     //const newMode = languageElem.value.toLowerCase();
     if (extension in extToSyntaxModeName) {
@@ -104,6 +60,8 @@ function init() {
     doLoad();
     // also make sure the dropdown and highlighting match
     setInitialDropdownSelection();
+
+    initWhiteboard();
 }
 </script>
 </head>
@@ -205,8 +163,16 @@ function reloadWhiteboard() {
     //console.log("reloadWhiteboard: invoked");
     whiteboardElem.src = "/static/wb.png?" + new Date().getTime();
 }
-console.log("whiteboard refresh interval: {{ lenv["wbrefresh"] }}");
-setInterval(reloadWhiteboard, {{ lenv["wbrefresh"] }});
+
+function initWhiteboard() {
+    const wbRefreshMs = parseInt('{{ lenv["wbrefresh"] }}');
+    console.log("whiteboard refresh interval: " + wbRefreshMs);
+    if (typeof wbRefreshMs === 'number' && wbRefreshMs > 0) {
+        setInterval(reloadWhiteboard, wbRefreshMs);
+    } else {
+        console.log("Not starting whiteboard polling");
+    }
+}
 </script>
 </center>
 </div>
@@ -227,7 +193,7 @@ setInterval(reloadWhiteboard, {{ lenv["wbrefresh"] }});
 var ws = new WebSocket("{{wsurl}}");
 const padElem = document.getElementById("pad");
 function getInitialEditorSettings() {
-    const extension = "{{ lenv["extension"] }}";
+    const extension = '{{ lenv["extension"] }}';
     console.log("extension selected: " + extension);
 
     // TODO: dynamically load the CSS if it's not there, expand this lookup

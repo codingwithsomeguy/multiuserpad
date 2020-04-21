@@ -86,7 +86,7 @@ def user_home():
                                wsurl=config.MY_WS_URL, profile=get_profile(),
                                lenv={
                                    "extension": config.CODE_EXTENSION,
-                                   "wbrefresh": config.MY_WHITEBOARD_REFRESH_MS})
+                                   "wbrefresh": config.WHITEBOARD_REFRESH_MS})
     else:
         abort(401)
 

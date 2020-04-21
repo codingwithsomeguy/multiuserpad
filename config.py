@@ -14,7 +14,7 @@ class Config:
         self.MY_WS_PORT = urlparse(
             config["server"]["web_socket"]["url"]).port
 
-        self.MY_WHITEBOARD_REFRESH_MS = config["parameters"]["whiteboard_refresh_ms"]
+        self.WHITEBOARD_REFRESH_MS = config["parameters"]["whiteboard_refresh_ms"]
 
         # TODO: don't reassemble these, just read direct
         self.MY_URL = "http://%s:%d" % (self.MY_HOST_NAME, self.MY_WEB_PORT)
