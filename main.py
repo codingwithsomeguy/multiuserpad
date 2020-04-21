@@ -3,7 +3,7 @@ import os
 from flask import Flask, render_template, request, redirect, session, abort
 from flask_session import Session
 
-import config
+from config import config
 from creds import get_creds
 import discordutil
 import twitchutil

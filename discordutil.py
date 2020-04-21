@@ -6,7 +6,7 @@ from flask import redirect, request, session
 import requests
 
 from creds import get_creds
-import config
+from config import config
 from sessionutil import invalidate_session
 
 

@@ -7,7 +7,7 @@ import json
 
 from flask import request, redirect, session
 from creds import get_creds
-import config
+from config import config
 from sessionutil import invalidate_session
 
 
