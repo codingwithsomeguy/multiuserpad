@@ -11,7 +11,8 @@
         "whiteboard_refresh_ms": 500,
         "code_extension": "c",
         "temporary_code_directory": "/tmp/learnas",
-        "host_encoding": "utf-8"
+        "host_encoding": "utf-8",
+        "enable_replay": true
     },
     "credentials_url": "http://127.0.0.1:5678/sec.json",
     "auth": {

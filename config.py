@@ -15,6 +15,7 @@ class Config:
             config["server"]["web_socket"]["url"]).port
 
         self.WHITEBOARD_REFRESH_MS = config["parameters"]["whiteboard_refresh_ms"]
+        self.ENABLE_REPLAY = config["parameters"]["enable_replay"]
         self.HOST_ENCODING = config["parameters"]["host_encoding"]
 
         # TODO: don't reassemble these, just read direct
