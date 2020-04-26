@@ -4,6 +4,8 @@
 
 _(I hope you're worried running this, when it breaks, you get to keep both pieces)_
 
+![multiuserpad screenshot](doc/screenshots/multiuserpad-20200426.png)
+
 multiuserpad is primarily a collaboration and learning tool for group text
 and development.  It was originally built for live learning / hack sessions
 for [codingwithsomeguy.com](https://codingwithsomeguy.com), but we'll see where it
