@@ -5,6 +5,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
+FS_OUTPUT_FILE = "/tmp/finalstate.txt"
+
 doc_lines = []
 apply_doc_edit_calls = -1
 
@@ -170,8 +172,8 @@ def run_static_tests():
     #result = compute_final_state("data/typed-abgh-cdef-ins-1.json")
 
     # preserve tabs in output
-    open("finalstate.txt", "w").write(result)
-    logging.info("wrote out final state to finalstate.txt")
+    open(FS_OUTPUT_FILE, "w").write(result)
+    logging.info("wrote out final state to %s" % FS_OUTPUT_FILE)
     
 
 if __name__ == "__main__":
