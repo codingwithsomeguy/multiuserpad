@@ -35,6 +35,8 @@ async def handle_websocket(websocket, path):
     global connection_pool
     logging.info("handle_websocket: invoked")
     connection_pool.append(websocket)
+    # ws message actions to be sent to everyone else
+    actions_for_all_else = ["outputcontrol", "output"]
     async for raw_message in websocket:
         # should be edit messages from clients
         try:
@@ -47,6 +49,8 @@ async def handle_websocket(websocket, path):
                     await send_all_but_ws(raw_message, websocket)
                 elif message["action"] == "replay":
                     await websocket.send(get_all_replay())
+                elif message["action"] in actions_for_all_else:
+                    await send_all_but_ws(raw_message, websocket)
         except json.decoder.JSONDecodeError:
             logging.info("message failed json parse")
 

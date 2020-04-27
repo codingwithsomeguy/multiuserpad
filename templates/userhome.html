@@ -242,7 +242,10 @@ ws.onmessage = function (evt) {
             editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
             editor.on("change", handleChange);
         } else if (message["action"] === "output") {
-            addOutputLine(message["content"]);
+            if (message["content"].stderr !== "") {
+                addErrorLine(message["content"].stderr);
+            }
+            addOutputLine(message["content"].stdout);
         } else if (message["action"] === "outputcontrol") {
             resetOutputValue();
         }
