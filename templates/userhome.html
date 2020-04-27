@@ -140,6 +140,25 @@ function doLanguage() {
         editor.setOption("mode", loadedModes[newMode]);
     }
 }
+
+function startReplay() {
+    const messageObj = {
+        "action": "replay",
+    };
+    ws.send(JSON.stringify(messageObj));
+}
+
+function doReplay(replayBody) {
+    editor.off("change", handleChange);
+    editor.setValue("");
+    for (let i = 0 ; i < replayBody.length ; ++i) {
+        // TODO: unsafe parse
+        const changeObj = JSON.parse(replayBody[i])["contents"];
+        //console.log(changeObj);
+        editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
+    }
+    editor.on("change", handleChange);
+}
 </script>
 <span class="hdrtitle">
 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAMAAAC6V+0/AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABnlBMVEUAAAAEBAAFBQEBAQAMCwECBAMECgYBAwIICAE1MAYYFgMDAwAxLgUREAICAgABAgEIFA0SLx4FDgkrJwQiHwQaGAMjIARLRQgbGAM8Nwc5NQYyLgUODAECBgQIFg4LHBMYPigSLh4GBgE3MwYVEwIdGwNXUAo2MgZHQQhAOgceGwM0MAVUTQk8NwYHEAoXOSYKGxIHEgwKGhECBQMlIgQSEAIQDwITEgIJCAEWFAI7NgYAAQENDAEgHQMBAQMGBwkYHCQDBAUBAQEDAwQEBAUmLTkNEBQHCAsHCQsCAgMMDhI3QVMoMD0tNEM2QFIvOEcPEhcvN0crM0EsNEMxOkofJC4KDBAiKDMkKzceIy4dIy0dIiwRExkICgwOERYjKTQjKTUFBggEAwMDAwIKCggeHBkHBgY1MSstKiQSEQ81MisTEg9KRTwiIBseHBgoJSErKCMDAgI0MCoNDAsNDApTTkQkIh0uKyVdV0stKiVhW08oJiEwLSdRTEIDAwM0MSsXFhMjIR0XFRMaGBUYFxQUEhAKCQgODQwCAgL///+1t0JKAAAAAWJLR0SJHGEmzAAAAAd0SU1FB+QEDRALOwgyHrYAAAC+SURBVBiVY2TAAhhxCDIy/mNgZvz/FyLAysj4k5GBg5HxGwM3UIb5E1CMn5GR8R0jg/D3n4KMMPCZD0g8Y1SC8T8KgKlr2kCCWZ2LkfGMKeMJBsvfbBf/mBxFtd2G8fgfTCfZ/T2KJGjPyLjfCWr0dpigFyMCrIYJhoG5T2RB5AIMbzrJv9iOJOik8IBhX/L9fUlMc6CCqYx3VOGGToAIFiLZw/i/BSJYx/iL/ScHSAQYYndh2jt27SMqkDEBAFLfLk9mMEZgAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA0LTEzVDIwOjExOjU5LTA0OjAwAPtbDwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNC0xM1QyMDoxMTo1OS0wNDowMHGm47MAAAAASUVORK5CYII=" alt="CSG Learn">
@@ -245,6 +264,8 @@ ws.onmessage = function (evt) {
             addOutputLine(message["content"]);
         } else if (message["action"] === "outputcontrol") {
             resetOutputValue();
+        } else if (message["action"] === "replay") {
+            doReplay(message["body"]);
         }
     }
 };
