@@ -15,4 +15,13 @@ Too much.  But a few things not to forget:
 * move the whiteboard to redis instead of fs
 * example of uploading a whiteboard
 * allow / require auth on whiteboard (setting)
-* twitch (or other) auth
+* ~twitch (or other) auth~
+* shared selection updating
+* pylint / tox integration
+* auto start dev script (main / wsmain), or subprocess
+* local auth for test cases
+* selenium basic tests
+* integration torture test for large numbers of edits
+* job control on infinite run away processes
+* show cpu load / memory in runtime env
+* stop the infinite memory growth for editorstate records
