@@ -3,3 +3,4 @@ Flask-Session
 websockets
 requests
 redis
+setuptools

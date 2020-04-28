@@ -3,7 +3,7 @@
 import os
 from glob import glob
 
-import editorstate as es
+import multiuserpad.editorstate as es
 
 
 def get_json_records_with_finalstate(base_dir):
