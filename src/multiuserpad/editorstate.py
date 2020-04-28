@@ -157,24 +157,5 @@ def compute_final_state(test_dump_file):
         #if edit_num == 5:
         #    break
         #sleep(0.2)
-    return "\n".join(doc_lines)
-
-
-# TODO: move to tox
-def run_static_tests():
-    #result = compute_final_state("data/typed-c-main-1.json")
-    result = compute_final_state("data/typed-c-main-2.json")
-    #result = compute_final_state("data/typed-c-main-3.json")
-    #result = compute_final_state("data/typed-c-main-4.json")
-    #result = compute_final_state("data/typed-a-b-multi-1.json")
-    #result = compute_final_state("data/typed-ab-del-cd-1.json")
-    #result = compute_final_state("data/typed-abcdef-del-gh-1.json")
-    #result = compute_final_state("data/typed-abgh-cdef-ins-1.json")
-
-    # preserve tabs in output
-    open(FS_OUTPUT_FILE, "w").write(result)
-    logging.info("wrote out final state to %s" % FS_OUTPUT_FILE)
-    
-
-if __name__ == "__main__":
-    run_static_tests()
+    # add a final newline, always, to match other editors
+    return "\n".join(doc_lines) + "\n"
