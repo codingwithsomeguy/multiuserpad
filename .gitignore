@@ -5,3 +5,4 @@ v0/
 *.egg-info
 dist/
 .coverage
+htmlcov/

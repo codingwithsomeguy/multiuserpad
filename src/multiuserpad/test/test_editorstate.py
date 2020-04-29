@@ -3,6 +3,7 @@
 import os
 from glob import glob
 
+import pytest
 import multiuserpad.editorstate as es
 
 
@@ -28,8 +29,23 @@ def test_editorstate_finalstate():
     """check the computed final state matches the final state"""
     test_set = get_json_records_with_finalstate("data")
     for json_file, final_file in test_set:
+        es.doc_lines = []
+        es.apply_doc_edit_calls = -1
         final_state = open(final_file).read()
-        computed_final_state = es.compute_final_state(
-            json_file)
+        computed_final_state = es.compute_final_state(json_file)
         err_mesg = "%s doesn't match" % json_file
         assert computed_final_state == final_state, err_mesg
+
+
+def test_editorstate_invalidinput():
+    json_file = "data/invalidinput/insert-oneafter-lineend.json"
+    with pytest.raises(es.EditorStateException):
+        es.doc_lines = []
+        es.apply_doc_edit_calls = -1
+        es.compute_final_state(json_file)
+
+    json_file = "data/invalidinput/insert-twoafter-lineend.json"
+    with pytest.raises(es.EditorStateException):
+        es.doc_lines = []
+        es.apply_doc_edit_calls = -1
+        es.compute_final_state(json_file)

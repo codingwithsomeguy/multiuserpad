@@ -115,22 +115,23 @@ def apply_doc_edit(edit):
                     for line_count in range(len(text_lines)-1, -1, -1):
                         logging.info("  line: %s" % text_lines[line_count])
                         if line_count == 0:
-                            logging.info("first line")
+                            logging.info("mid line insertion - first line")
                             # If not adding at the last char, it has a deletion too
                             doc_lines[from_line] = lhs + text_lines[line_count]
                         else:
-                            logging.info("middle/last line")
+                            logging.info("mid line insertion - middle/last line")
                             # should assert to_ch is the same (pure insert)
                             logging.info("MAYBE BUG - INSERT +1")
                             doc_lines.insert(from_line + 1, text_lines[line_count] + rhs)
                 else:
                     # single line insertion
+                    logging.info("mid line insertion - single line")
                     added_text = "\n".join(text_lines)
                     doc_lines[from_line] = lhs + added_text + rhs
             else:
                 raise EditorStateException("ODD MULTI LINE INSERTION")
         else:
-            raise EditorStateException("unimplemented")
+            raise EditorStateException("unimplemented: " + json.dumps(edit))
     logging.info("  after change: %s" % json.dumps(doc_lines))
     logging.info("")
     if stop_after == True:
