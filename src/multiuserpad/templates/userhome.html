@@ -245,6 +245,7 @@ const editor = CodeMirror.fromTextArea(padElem, getInitialEditorSettings());
 //editor.setSize(75 * 10 + 22, 27 * (20 + 4));
 editor.setSize(75 * 10 + 22 + 70, "100%");
 editor.on("change", handleChange);
+editor.on("beforeSelectionChange", handleChangeSelection);
 
 ws.onmessage = function (evt) {
     //console.log(evt);
@@ -257,9 +258,22 @@ ws.onmessage = function (evt) {
             const changeObj = message["contents"];
 
             // apply the changes
+            const currentPosition = editor.getCursor();
+            editor.off("beforeSelectionChange", handleChangeSelection);
             editor.off("change", handleChange);
+            // deselect (jump to cursor) before applying
+            editor.setSelection(currentPosition);
             editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
             editor.on("change", handleChange);
+            editor.on("beforeSelectionChange", handleChangeSelection);
+        } else if (message["action"] === "selection") {
+            const changeObj = message["contents"];
+            const foreignAnchor = changeObj["anchor"];
+            const foreignHead = changeObj["head"];
+            console.log("foreign selection:", foreignAnchor, foreignHead);
+            editor.off("beforeSelectionChange", handleChangeSelection);
+            editor.setSelection(foreignAnchor, foreignHead);
+            editor.on("beforeSelectionChange", handleChangeSelection);
         } else if (message["action"] === "output") {
             if (message["content"].stderr !== "") {
                 addErrorLine(message["content"].stderr);
@@ -283,8 +297,47 @@ function handleChange(editorInstance, changeObj) {
         "action": "edit",
         "contents": changeObj
     };
-    var message = JSON.stringify(messageObj);
+    const message = JSON.stringify(messageObj);
     ws.send(message);
+}
+
+function arePositionsEqual(p1, p2) {
+    let result = false;
+    if (p1.line === p2.line && p1.ch === p2.ch) {
+        result = true;
+    }
+    return result;
+}
+
+function handleChangeSelection(editorInstance, changeObj) {
+    // TODO: unsafe on purpose, check behavior first, fix later
+    const firstRange = changeObj.ranges[0];
+    // anchor is the start of the selection
+    const firstAnchor = firstRange.anchor;
+    // head is where the cursor now is
+    const firstHead = firstRange.head;
+    if (arePositionsEqual(firstAnchor, firstHead) === false) {
+        // selection seems to have different anchor/head positions
+        var messageObj = {
+            "action": "selection",
+            "contents": {
+                "anchor": firstAnchor,
+                "head": firstHead
+            }
+        };
+        // TODO: debounce this
+        const message = JSON.stringify(messageObj);
+        ws.send(message);
+    } else if (editor.somethingSelected() === false) {
+        // TODO: allow foreign selection while handling input
+        // For now, just always select current head to deselect
+        // TODO: consider emitting a deselect event
+        //   when previously selected (state)
+        const currentPosition = editor.getCursor();
+        editor.off("beforeSelectionChange", handleChangeSelection);
+        editor.setSelection(currentPosition);
+        editor.on("beforeSelectionChange", handleChangeSelection);
+    }
 }
 
 </script>

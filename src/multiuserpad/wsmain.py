@@ -62,7 +62,7 @@ async def handle_websocket(websocket, path):
     logging.info("handle_websocket: invoked")
     connection_pool.append(websocket)
     # ws message actions to be sent to everyone else
-    actions_for_all_else = ["outputcontrol", "output"]
+    actions_for_all_else = ["outputcontrol", "output", "selection"]
     async for raw_message in websocket:
         # should be edit messages from clients
         try:
