@@ -12,10 +12,14 @@ import twitchutil
 from sessionutil import invalidate_session
 
 
+# maps from file extension to an action
 KNOWN_EXECUTION_MODELS = {
     "c": "cd '%s' && gcc '%s' -o webinput -lm && ./webinput",
     "py": "cd '%s' && python3 '%s'",
-    "js": "cd '%s' && node '%s'"
+    "js": "cd '%s' && node '%s'",
+    # TODO: change classname from Default with multi-file-handling
+    "java": "cd '%s' && javac '%s' && java Default",
+    "cs": "cd '%s' && mcs '%s' && mono autosrc.exe",
 }
 
 

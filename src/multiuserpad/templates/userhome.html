@@ -22,7 +22,9 @@
 const extToSyntaxModeName = {
     "py": {"dropdownValue": "python", "syntaxMode": "python"},
     "js": {"dropdownValue": "javascript", "syntaxMode": "javascript"},
-    "c": {"dropdownValue": "c", "syntaxMode": "text/x-csrc"}
+    "c": {"dropdownValue": "c", "syntaxMode": "text/x-csrc"},
+    "java": {"dropdownValue": "java", "syntaxMode": "text/x-java"},
+    "cs": {"dropdownValue": "csharp", "syntaxMode": "text/x-csharp"},
 };
 
 function setInitialDropdownSelection() {
@@ -128,13 +130,10 @@ function doExecute() {
 
 function doLanguage() {
     const languageElem = document.getElementById("language");
-    // TODO: refactor to extToSyntaxModeName
-    const loadedModes = {
-        "python": "python",
-        "javascript": "javascript",
-        "c": "text/x-csrc"
-        
-    };
+    const loadedModes = {};
+    Object.values(extToSyntaxModeName).forEach(function (x) {
+        loadedModes[x["dropdownValue"]] = x["syntaxMode"]});
+
     const newMode = languageElem.value.toLowerCase();
     if (newMode in loadedModes) {
         editor.setOption("mode", loadedModes[newMode]);
@@ -167,6 +166,8 @@ function doReplay(replayBody) {
     <option value="python">Python</option>
     <option value="javascript">Javascript</option>
     <option value="c">C</option>
+    <option value="java">Java</option>
+    <option value="csharp">C#</option>
 </select>
 <button onclick="doAutosave()">Save</button>
 <button onclick="doExecute()">Execute</button>

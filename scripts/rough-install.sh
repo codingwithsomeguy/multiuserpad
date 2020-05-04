@@ -4,7 +4,7 @@ echo "TOTALLY ALPHA UNSTABLE - DON'T RUN THIS"
 
 install_prereqs() {
     # adding gcc and nodejs for additional runtimes
-    PACKAGE_LIST="python3-venv redis gcc nodejs"
+    PACKAGE_LIST="python3-venv redis gcc nodejs default-jdk-headless mono-mcs mono-runtime"
     echo "Installing [${PACKAGE_LIST}]"
     sudo apt install -y ${PACKAGE_LIST}
 
