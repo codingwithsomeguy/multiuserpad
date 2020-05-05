@@ -183,12 +183,12 @@ function doReplay(replayBody) {
 <div class="divcontent">
 <div width="100%" style="background-color:black;">
 <center>
-<img id="whiteboard" src="/static/wb.png" width="711px" height="400px" alt="whiteboard">
+<img id="whiteboard" src="/wb" width="711px" height="400px" alt="whiteboard">
 <script>
 const whiteboardElem = document.getElementById("whiteboard");
 function reloadWhiteboard() {
     //console.log("reloadWhiteboard: invoked");
-    whiteboardElem.src = "/static/wb.png?" + new Date().getTime();
+    whiteboardElem.src = "/wb?" + new Date().getTime();
 }
 
 function initWhiteboard() {

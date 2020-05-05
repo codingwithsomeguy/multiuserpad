@@ -2,13 +2,15 @@ import os
 import json
 import subprocess
 
-from flask import Flask, render_template, request, redirect, session, abort
+from flask import Flask, render_template
+from flask import Response, request, redirect, session, abort
 from flask_session import Session
 
 from config import config
 from creds import get_creds
 import discordutil
 import twitchutil
+from whiteboard import update_redis_wb, get_redis_wb, default_wb_image
 from sessionutil import invalidate_session
 
 
@@ -166,15 +168,22 @@ def do_execute():
     abort(401)
 
 
-# TODO: don't write to disk
 # TODO: add session specifics to this
-# TODO: auth this
+# TODO: auth this before using a push notification
 # TODO: tell web clients to reload the board if it changed
-@app.route("/wbupdate", methods=['POST'])
+@app.route("/wb", methods=['GET', 'POST'])
 def whiteboard_update():
-    rawdata = request.get_data()
-    open("static/wb.png", "wb").write(rawdata)
-    return "ok"
+    if request.method == "GET":
+        # TODO: allow other image types
+        img = get_redis_wb()
+        if img is None:
+            img = default_wb_image
+        return Response(img, mimetype="image/png")
+    elif request.method == "POST":
+        # TODO: record image type as well
+        rawdata = request.get_data()
+        update_redis_wb(rawdata)
+        return "ok"
 
 
 @app.errorhandler(401)
