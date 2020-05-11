@@ -15,6 +15,12 @@ class EditorStateException(Exception):
     pass
 
 
+# DOES NOT TERMINATE FILE WITH A NEWLINE!!!!
+def get_document_state():
+    global doc_lines
+    return "\n".join(doc_lines)
+
+
 # TODO: refactor this monstrosity
 def apply_doc_edit(edit):
     global apply_doc_edit_calls, doc_lines

@@ -56,10 +56,16 @@ function resetOutputValue() {
     outputElem.value = "Output:\n";
 }
 
+// TODO: wrap ws functionality in a proper object / class
+let ws;
 function init() {
+    ws = new WebSocket("{{wsurl}}");
+    ws.onmessage = handleWsMessage;
+    ws.onopen = function (evt) {
+        startLoad();
+    };
     resetOutputValue();
     // TODO(race): make sure the editor is ready
-    doLoad();
     // also make sure the dropdown and highlighting match
     setInitialDropdownSelection();
 
@@ -70,23 +76,10 @@ function init() {
 <body onload="init()">
 
 <script>
-function doLoad() {
-    const req = new Request("/load", {});
-    fetch(req).then(response => response.text()).then(x => {
-        editor.off("change", handleChange);
-        editor.setValue(x);
-        editor.on("change", handleChange);
-    });
-}
-
-function doAutosave() {
-    console.log("doAutosave: invoked");
-    const codeText = editor.getValue();
-    const req = new Request("/autosave", {
-        method: "POST",
-        body: codeText
-    });
-    fetch(req).then(response => response.text()).then(x => console.log(x));
+function doLoadMessage(messageBody) {
+    editor.off("change", handleChange);
+    editor.setValue(messageBody);
+    editor.on("change", handleChange);
 }
 
 function addOutputLine(src, prefix="> ") {
@@ -109,23 +102,20 @@ function doClearOutput(evt) {
 }
 
 function doExecute() {
-    const codeText = editor.getValue();
-    const req = new Request("/execute", {
-        method: "POST",
-        body: codeText
-    });
+    const messageObj = {
+        "action": "execute",
+    };
+    ws.send(JSON.stringify(messageObj));
+}
 
-    fetch(req).then(response => response.json()).then(x => {
-        if (x.stderr !== "") {
-            addErrorLine(x.stderr);
-        }
-        addOutputLine(x.stdout);
-        const messageObj = {
-            "action": "output",
-            "content": x
-        };
-        ws.send(JSON.stringify(messageObj));
-    });
+function doExecuteMessage(message) {
+    if (message.stderr !== "") {
+        addErrorLine(message.stderr);
+    }
+    addOutputLine(message.stdout);
+
+    // this used to send "output" messages to other clients, now
+    //   execute is doing that (reconsider for BYO runtimes)
 }
 
 function doLanguage() {
@@ -138,6 +128,13 @@ function doLanguage() {
     if (newMode in loadedModes) {
         editor.setOption("mode", loadedModes[newMode]);
     }
+}
+
+function startLoad() {
+    const messageObj = {
+        "action": "load",
+    };
+    ws.send(JSON.stringify(messageObj));
 }
 
 function startReplay() {
@@ -169,7 +166,6 @@ function doReplay(replayBody) {
     <option value="java">Java</option>
     <option value="csharp">C#</option>
 </select>
-<button onclick="doAutosave()">Save</button>
 <button onclick="doExecute()">Execute</button>
 
 <span class="hdrspacer"></span>
@@ -217,7 +213,6 @@ function initWhiteboard() {
 
 
 <script>
-var ws = new WebSocket("{{wsurl}}");
 const padElem = document.getElementById("pad");
 function getInitialEditorSettings() {
     const extension = '{{ lenv["extension"] }}';
@@ -248,7 +243,7 @@ editor.setSize(75 * 10 + 22 + 70, "100%");
 editor.on("change", handleChange);
 editor.on("beforeSelectionChange", handleChangeSelection);
 
-ws.onmessage = function (evt) {
+function handleWsMessage(evt) {
     //console.log(evt);
     const message = JSON.parse(evt.data);
     console.log("message:", message);
@@ -284,13 +279,13 @@ ws.onmessage = function (evt) {
             resetOutputValue();
         } else if (message["action"] === "replay") {
             doReplay(message["body"]);
+        } else if (message["action"] === "load") {
+            doLoadMessage(message["body"]);
+        } else if (message["action"] === "execute") {
+            doExecuteMessage(message);
         }
     }
-};
-
-ws.onopen = function (evt) {
-    //ws.send("JS Client sending something!");
-};
+}
 
 function handleChange(editorInstance, changeObj) {
     // TODO: make sure the websocket is REALLY open first...

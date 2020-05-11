@@ -12,17 +12,7 @@ import discordutil
 import twitchutil
 from whiteboard import update_redis_wb, get_redis_wb, default_wb_image
 from sessionutil import invalidate_session
-
-
-# maps from file extension to an action
-KNOWN_EXECUTION_MODELS = {
-    "c": "cd '%s' && gcc '%s' -o webinput -lm && ./webinput",
-    "py": "cd '%s' && python3 '%s'",
-    "js": "cd '%s' && node '%s'",
-    # TODO: change classname from Default with multi-file-handling
-    "java": "cd '%s' && javac '%s' && java Default",
-    "cs": "cd '%s' && mcs '%s' && mono autosrc.exe",
-}
+from runtime import get_autosave_filename
 
 
 def init_flask():
@@ -95,77 +85,6 @@ def user_home():
                                    "wbrefresh": config.WHITEBOARD_REFRESH_MS})
     else:
         abort(401)
-
-
-def get_autosave_filename():
-    as_filename = "autosrc.%s" % config.CODE_EXTENSION
-    autosave_file = os.path.join(config.CODE_DIR, as_filename)
-    return autosave_file
-
-
-def do_load():
-    autosave_file = get_autosave_filename()
-    text = ""
-    try:
-        text = open(autosave_file, "r").read()
-    except FileNotFoundError:
-        pass
-    return text
-
-
-def do_save(text):
-    # TODO: use a real temp file?
-    autosave_file = get_autosave_filename()
-    # TODO: take this from the autosave filename
-    os.makedirs(config.CODE_DIR, exist_ok=True)
-    open(autosave_file, "w").write(text)
-    return autosave_file
-
-
-@app.route("/load")
-def load():
-    if is_authorized():
-        return do_load()
-    abort(401)
-
-
-# TODO: change to save, not autosave (that's a client thing)
-@app.route("/autosave", methods=['POST'])
-def autosave():
-    if is_authorized():
-        rawdata = request.get_data()
-        # TODO: make sure this is text before calling decode!!!
-        text = rawdata.decode("utf-8")
-        do_save(text)
-        return "autosaved"
-    abort(401)
-
-
-
-@app.route("/execute", methods=['POST'])
-def do_execute():
-    if is_authorized():
-        rawdata = request.get_data()
-        # TODO: make sure this is text before calling decode!!!
-        text = rawdata.decode("utf-8")
-        temp_filename = do_save(text)
-        temp_filepart = os.path.split(temp_filename)[1]
-        # TODO: check which env to do based on extension passed in
-        #   or the session / need some variables
-        selected_model = "py"
-        if config.CODE_EXTENSION in KNOWN_EXECUTION_MODELS:
-            selected_model = config.CODE_EXTENSION
-        cmd_pattern = KNOWN_EXECUTION_MODELS[selected_model]
-        # assume we're in the same directory
-        cmd = cmd_pattern % (config.CODE_DIR, temp_filepart)
-        sub_pipe = subprocess.Popen(
-            cmd, shell=True,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        sub_pipe_stdout, sub_pipe_stderr = sub_pipe.communicate()
-        return json.dumps({
-            "stdout": sub_pipe_stdout.decode(config.HOST_ENCODING),
-            "stderr": sub_pipe_stderr.decode(config.HOST_ENCODING)})
-    abort(401)
 
 
 # TODO: add session specifics to this

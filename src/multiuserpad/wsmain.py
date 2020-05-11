@@ -3,23 +3,25 @@ import websockets
 import json
 from config import config
 import logging
-from editorstate import apply_doc_edit
+
+from editorstate import apply_doc_edit, get_document_state
+from runtime import executor
+
 
 logging.basicConfig(level=logging.INFO)
-
-
 RECORD_OUTPUT_FILE = "/tmp/records.json"
+
 
 # TODO: properly shard and share connection state
 connection_pool = []
 all_actions = []
 
 
-async def send_all_but_ws(message, ws_to_avoid):
+async def send_all(message, ws_to_avoid=None):
     for client_ws in connection_pool:
         is_open = client_ws.state == websockets.protocol.State.OPEN
         # TODO: remove it from the pool if is_open is false
-        if is_open and client_ws != ws_to_avoid:
+        if is_open and client_ws is not None and client_ws != ws_to_avoid:
             await client_ws.send(message)
 
 
@@ -57,6 +59,27 @@ def get_all_replay():
         "body": replay_log})
 
 
+def marshal_load_response():
+    replay_log = all_actions
+    # TODO: remove / generalize test code:
+    #replay_log = json.load(open("data/typed-c-main-2.json"))
+    return json.dumps({
+        "action": "load",
+        "enabled": config.ENABLE_REPLAY,
+        "body": get_document_state()})
+
+
+def marshal_execution_response():
+    stdout, stderr = executor(get_document_state())
+
+    # TODO: generalize iostream handling past stderr/stdout
+    return json.dumps({
+        "action": "execute",
+        "enabled": config.ENABLE_REPLAY,
+        "stdout": stdout,
+        "stderr": stderr})
+
+
 async def handle_websocket(websocket, path):
     global connection_pool
     logging.info("handle_websocket: invoked")
@@ -73,11 +96,16 @@ async def handle_websocket(websocket, path):
                     # TODO: add client_id
                     add_replay(raw_message)
                     # TODO: use real connection ids instead of comparing to ws
-                    await send_all_but_ws(raw_message, websocket)
+                    await send_all(raw_message, websocket)
                 elif message["action"] == "replay":
                     await websocket.send(get_all_replay())
+                elif message["action"] == "load":
+                    await websocket.send(marshal_load_response())
+                elif message["action"] == "execute":
+                    execution_response = marshal_execution_response()
+                    await send_all(execution_response)
                 elif message["action"] in actions_for_all_else:
-                    await send_all_but_ws(raw_message, websocket)
+                    await send_all(raw_message, websocket)
                 elif message["action"] == "dump":
                     json.dump(all_actions, open(RECORD_OUTPUT_FILE, "w"))
                     logging.info("dumped in %s" % RECORD_OUTPUT_FILE)
