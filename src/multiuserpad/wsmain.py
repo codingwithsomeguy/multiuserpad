@@ -52,32 +52,37 @@ def add_replay(message):
 def get_all_replay():
     replay_log = all_actions
     # TODO: remove / generalize test code:
-    #replay_log = json.load(open("data/typed-c-main-2.json"))
-    return json.dumps({
-        "action": "replay",
-        "enabled": config.ENABLE_REPLAY,
-        "body": replay_log})
+    # replay_log = json.load(open("data/typed-c-main-2.json"))
+    return json.dumps(
+        {"action": "replay", "enabled": config.ENABLE_REPLAY, "body": replay_log}
+    )
 
 
 def marshal_load_response():
     replay_log = all_actions
     # TODO: remove / generalize test code:
-    #replay_log = json.load(open("data/typed-c-main-2.json"))
-    return json.dumps({
-        "action": "load",
-        "enabled": config.ENABLE_REPLAY,
-        "body": get_document_state()})
+    # replay_log = json.load(open("data/typed-c-main-2.json"))
+    return json.dumps(
+        {
+            "action": "load",
+            "enabled": config.ENABLE_REPLAY,
+            "body": get_document_state(),
+        }
+    )
 
 
 def marshal_execution_response():
     stdout, stderr = executor(get_document_state())
 
     # TODO: generalize iostream handling past stderr/stdout
-    return json.dumps({
-        "action": "execute",
-        "enabled": config.ENABLE_REPLAY,
-        "stdout": stdout,
-        "stderr": stderr})
+    return json.dumps(
+        {
+            "action": "execute",
+            "enabled": config.ENABLE_REPLAY,
+            "stdout": stdout,
+            "stderr": stderr,
+        }
+    )
 
 
 async def handle_websocket(websocket, path):
@@ -115,8 +120,7 @@ async def handle_websocket(websocket, path):
 
 def main():
     logging.info("Starting WS on port %d" % config.MY_WS_PORT)
-    wsserver = websockets.serve(handle_websocket,
-        "0.0.0.0", config.MY_WS_PORT)
+    wsserver = websockets.serve(handle_websocket, "0.0.0.0", config.MY_WS_PORT)
     asyncio.get_event_loop().run_until_complete(wsserver)
     asyncio.get_event_loop().run_forever()
 

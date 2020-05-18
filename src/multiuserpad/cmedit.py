@@ -17,10 +17,8 @@ class cmedit:
         self.text_lines = cm_edit["text"]
         self.remove_lines = cm_edit["removed"]
 
-
     def get_removed_text(self):
         return "\n".join(self.remove_lines)
-
 
     def __repr__(self):
         return "cmedit[%s]" % self._debug_rawedit

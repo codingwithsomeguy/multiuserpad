@@ -7,12 +7,9 @@ class Config:
         # TODO: rename config --> raw_config
         config = json.load(open("config.json"))
 
-        self.MY_HOST_NAME = urlparse(
-            config["server"]["web"]["url"]).hostname
-        self.MY_WEB_PORT = urlparse(
-            config["server"]["web"]["url"]).port
-        self.MY_WS_PORT = urlparse(
-            config["server"]["web_socket"]["url"]).port
+        self.MY_HOST_NAME = urlparse(config["server"]["web"]["url"]).hostname
+        self.MY_WEB_PORT = urlparse(config["server"]["web"]["url"]).port
+        self.MY_WS_PORT = urlparse(config["server"]["web_socket"]["url"]).port
 
         self.WHITEBOARD_REFRESH_MS = config["parameters"]["whiteboard_refresh_ms"]
         self.ENABLE_REPLAY = config["parameters"]["enable_replay"]

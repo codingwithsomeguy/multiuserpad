@@ -4,6 +4,7 @@ import os
 
 # TODO: remove the path hack (did the needful :( )
 import sys
+
 sys.path.append(os.path.join(os.path.abspath("."), "src", "multiuserpad"))
 
 from glob import glob
@@ -26,8 +27,7 @@ def get_json_records_with_finalstate(base_dir):
 def test_enough_editorstate_finalstate_testcases():
     """Verify there are a minimum number of editorstate tests"""
     test_set = get_json_records_with_finalstate("data")
-    assert len(test_set) > 7, (
-        "not enough editorstate/finalstate test cases")
+    assert len(test_set) > 7, "not enough editorstate/finalstate test cases"
 
 
 def test_editorstate_finalstate():

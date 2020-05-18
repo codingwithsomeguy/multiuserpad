@@ -13,7 +13,7 @@ def get_creds():
             "client_id": "MOCKCLIENTID",
             "client_secret": "MOCKCLIENTSECRET",
             "twitch_client_id": "MOCKCLIENTID",
-            "twitch_client_secret": "MOCKCLIENTID"
+            "twitch_client_secret": "MOCKCLIENTID",
         }
         try:
             with urllib.request.urlopen(config.CREDENTIALS_URL) as response_file:

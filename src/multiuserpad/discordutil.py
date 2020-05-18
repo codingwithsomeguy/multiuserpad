@@ -17,10 +17,12 @@ def discord_login():
         "client_secret": ss["client_secret"],
         "redirect_uri": "%s/api/ident/cb" % config.MY_URL,
         "response_type": "code",
-        "scope": "identify"
+        "scope": "identify",
     }
     redirect_url = "%s/oauth2/authorize?%s" % (
-        config.DISCORD_API_URL, urlencode(params))
+        config.DISCORD_API_URL,
+        urlencode(params),
+    )
     return redirect(redirect_url)
 
 
@@ -36,7 +38,7 @@ def discord_login_cb():
         result = "Code was %s" % code
         user_authenticated = fetch_token(code)
     if user_authenticated == True:
-        #logging.debug("session:", session)
+        # logging.debug("session:", session)
         discord_user_fetch_worked = fetch_discord_user()
         if not discord_user_fetch_worked:
             invalidate_session()
@@ -57,7 +59,7 @@ def fetch_token(code):
         "grant_type": "authorization_code",
         "code": code,
         "redirect_uri": "%s/api/ident/cb" % config.MY_URL,
-        "scope": "identify"
+        "scope": "identify",
     }
     # redirect_uri may need to match original cb URI (discord_login_cb)
     extra_headers = {
@@ -66,9 +68,12 @@ def fetch_token(code):
     response = requests.post(
         "%s/oauth2/token" % config.DISCORD_API_URL,
         data=urlencode(body_payload),
-        headers=extra_headers)
-    logging.debug("fetch_token: headers: %s\n\traw response: %s" % (
-        response.headers, response.text))
+        headers=extra_headers,
+    )
+    logging.debug(
+        "fetch_token: headers: %s\n\traw response: %s"
+        % (response.headers, response.text)
+    )
     try:
         token_response = json.loads(response.text)
         if "access_token" in token_response and "refresh_token" in token_response:
@@ -93,16 +98,15 @@ def fetch_discord_user():
 
     # TODO: get this from env, not hard coded auth
     extra_headers = {
-        "Authorization": "%s %s" % (
-            token["token_type"],
-            token["access_token"]
-        ),
+        "Authorization": "%s %s" % (token["token_type"], token["access_token"]),
     }
     response = requests.get(
-        "%s/users/@me" % config.DISCORD_API_URL,
-        headers=extra_headers)
-    logging.debug("fetch_discord_user: headers: %s\n\traw response: %s" % (
-        response.headers, response.text))
+        "%s/users/@me" % config.DISCORD_API_URL, headers=extra_headers
+    )
+    logging.debug(
+        "fetch_discord_user: headers: %s\n\traw response: %s"
+        % (response.headers, response.text)
+    )
 
     discord_avatar_url = None
     discord_full_username = None
@@ -112,9 +116,13 @@ def fetch_discord_user():
         parsed_response = json.loads(response.text)
         discord_avatar_url = "%s/avatars/%s/%s.png" % (
             config.DISCORD_CDN_URL,
-            parsed_response["id"], parsed_response["avatar"])
+            parsed_response["id"],
+            parsed_response["avatar"],
+        )
         discord_full_username = "%s#%s" % (
-            parsed_response["username"], parsed_response["discriminator"])
+            parsed_response["username"],
+            parsed_response["discriminator"],
+        )
         discord_id = parsed_response["id"]
     except ValueError as e:
         logging.error("ValueError: " + e)
@@ -125,7 +133,7 @@ def fetch_discord_user():
         "full_username": discord_full_username,
         "avatar_url": discord_avatar_url,
         "id": discord_id,
-        "authorized": discord_id in ss["authorized_discord_ids"]
+        "authorized": discord_id in ss["authorized_discord_ids"],
     }
 
     return True

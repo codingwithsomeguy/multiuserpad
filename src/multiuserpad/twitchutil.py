@@ -20,16 +20,14 @@ def twitch_login():
         "response_type": "code",
         "scope": "openid",  # not user_read, id_token, or user_subscriptions
         # need to request objects for the later userinfo request
-        "claims": json.dumps({
-            "id_token": {},
-            "userinfo": {
-                "picture": "null",
-                "preferred_username": "null",
+        "claims": json.dumps(
+            {
+                "id_token": {},
+                "userinfo": {"picture": "null", "preferred_username": "null",},
             }
-        })
+        ),
     }
-    redirect_url = "%s/oauth2/authorize?%s" % (
-        config.TWITCH_API_URL, urlencode(params))
+    redirect_url = "%s/oauth2/authorize?%s" % (config.TWITCH_API_URL, urlencode(params))
     return redirect(redirect_url)
 
 
@@ -74,9 +72,12 @@ def fetch_twitch_token(code):
     response = requests.post(
         "%s/oauth2/token" % config.TWITCH_API_URL,
         data=urlencode(body_payload),
-        headers=extra_headers)
-    logging.debug("fetch_twitch_token: headers: %s\n\traw response: %s" % (
-        response.headers, response.text))
+        headers=extra_headers,
+    )
+    logging.debug(
+        "fetch_twitch_token: headers: %s\n\traw response: %s"
+        % (response.headers, response.text)
+    )
     try:
         token_response = json.loads(response.text)
         if "access_token" in token_response and "refresh_token" in token_response:
@@ -106,16 +107,15 @@ def fetch_twitch_user():
 
     # this are attached to session in fetch_twitch_token
     extra_headers = {
-        "Authorization": "%s %s" % (
-            auth_header_token_type,
-            token["access_token"]
-        ),
+        "Authorization": "%s %s" % (auth_header_token_type, token["access_token"]),
     }
     response = requests.get(
-        "%s/oauth2/userinfo" % config.TWITCH_API_URL,
-        headers=extra_headers)
-    logging.debug("fetch_twitch_user: headers: %s\n\traw response: %s" % (
-        response.headers, response.text))
+        "%s/oauth2/userinfo" % config.TWITCH_API_URL, headers=extra_headers
+    )
+    logging.debug(
+        "fetch_twitch_user: headers: %s\n\traw response: %s"
+        % (response.headers, response.text)
+    )
 
     twitch_avatar_url = None
     twitch_username = None
@@ -137,6 +137,6 @@ def fetch_twitch_user():
         # TODO: get the right avatar from picture
         "avatar_url": twitch_avatar_url,
         "id": twitch_id,
-        "authorized": twitch_id in ss["authorized_twitch_ids"]
+        "authorized": twitch_id in ss["authorized_twitch_ids"],
     }
     return True

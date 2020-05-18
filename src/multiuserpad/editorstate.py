@@ -32,13 +32,12 @@ def edit_last_line(edit):
 
 
 def edit_nll_single_line_removal(edit):
-    logging.info(
-        "edit_nll_single_line_removal: %s" % str(edit.get_removed_text()))
+    logging.info("edit_nll_single_line_removal: %s" % str(edit.get_removed_text()))
     doc_line = doc_lines[edit.frompos.line]
     # on removal, edit.topos.ch is one char after
     removal_len = edit.topos.ch - edit.frompos.ch
-    lhs = doc_line[0:edit.frompos.ch]
-    rhs = doc_line[edit.topos.ch:]
+    lhs = doc_line[0 : edit.frompos.ch]
+    rhs = doc_line[edit.topos.ch :]
     logging.info("  lhs[%s]  rhs[%s]" % (lhs, rhs))
     doc_lines[edit.frompos.line] = lhs + rhs
 
@@ -52,31 +51,31 @@ def edit_nll_multi_line_removal(edit):
     # last line, remove from 0 to edit.topos.ch
 
     # do this backwards to deal with deletions mid iteration
-    for line_count in range(edit.topos.line, edit.frompos.line-1, -1):
+    for line_count in range(edit.topos.line, edit.frompos.line - 1, -1):
         logging.info("removing on line [%s]" % doc_lines[line_count])
         if line_count == edit.frompos.line:
             logging.info("first line")
             if edit.frompos.ch == 0:
                 del doc_lines[line_count]
             else:
-                lhs = doc_lines[line_count][0:edit.frompos.ch]
+                lhs = doc_lines[line_count][0 : edit.frompos.ch]
                 doc_lines[line_count] = lhs
         elif line_count == edit.topos.line:
             logging.info("last line")
             if len(doc_lines[line_count]) == edit.topos.ch:
                 del doc_lines[line_count]
             else:
-                rhs = doc_lines[line_count][edit.topos.ch:]
+                rhs = doc_lines[line_count][edit.topos.ch :]
                 doc_lines[line_count] = rhs
         else:
             logging.info("middle lines")
             del doc_lines[line_count]
-            #stop_after = True
+            # stop_after = True
 
 
 def edit_nll_last_ch_append(edit):
     logging.info("edit_nll_last_ch_append")
-    for line_count in range(len(edit.text_lines)-1, -1, -1):
+    for line_count in range(len(edit.text_lines) - 1, -1, -1):
         logging.info("  line: %s" % edit.text_lines[line_count])
         if line_count == 0:
             logging.info("first line")
@@ -87,8 +86,7 @@ def edit_nll_last_ch_append(edit):
             logging.info("middle/last line")
             # should assert edit.topos.ch is the same (pure insert)
             logging.info("MAYBE BUG - INSERT +1")
-            doc_lines.insert(
-                edit.frompos.line + 1, edit.text_lines[line_count])
+            doc_lines.insert(edit.frompos.line + 1, edit.text_lines[line_count])
 
 
 def edit_nll_mid_line_insertion(edit):
@@ -97,12 +95,12 @@ def edit_nll_mid_line_insertion(edit):
 
     # abc --> aDbc, first + new + second
     # insert the first line around from
-    lhs = doc_line[0:edit.frompos.ch]
-    rhs = doc_line[edit.frompos.ch:]
+    lhs = doc_line[0 : edit.frompos.ch]
+    rhs = doc_line[edit.frompos.ch :]
     # only add lines if it's multiline
     if len(edit.text_lines) > 1:
         # insertion has several lines
-        for line_count in range(len(edit.text_lines)-1, -1, -1):
+        for line_count in range(len(edit.text_lines) - 1, -1, -1):
             logging.info("  line: %s" % edit.text_lines[line_count])
             if line_count == 0:
                 logging.info("mid line insertion - first line")
@@ -112,7 +110,9 @@ def edit_nll_mid_line_insertion(edit):
                 logging.info("mid line insertion - middle/last line")
                 # should assert edit.topos.ch is the same (pure insert)
                 logging.info("MAYBE BUG - INSERT +1")
-                doc_lines.insert(edit.frompos.line + 1, edit.text_lines[line_count] + rhs)
+                doc_lines.insert(
+                    edit.frompos.line + 1, edit.text_lines[line_count] + rhs
+                )
     else:
         # single line insertion
         logging.info("mid line insertion - single line")
@@ -139,15 +139,13 @@ def edit_non_last_line(edit):
         else:
             raise EditorStateException("ODD MULTI LINE INSERTION")
     else:
-        raise EditorStateException(
-            "unimplemented: " + str(edit))
+        raise EditorStateException("unimplemented: " + str(edit))
 
 
 def apply_doc_edit(rawedit):
     global apply_doc_edit_calls, doc_lines
     apply_doc_edit_calls += 1
-    logging.info("Doc state change [%d]: %s" % (
-        apply_doc_edit_calls, str(rawedit)))
+    logging.info("Doc state change [%d]: %s" % (apply_doc_edit_calls, str(rawedit)))
     logging.info("  before change: %s" % json.dumps(doc_lines))
 
     edit = cmedit(rawedit)
@@ -168,20 +166,20 @@ def apply_doc_edit(rawedit):
 # test code / test utilities
 # TODO: put elsewhere
 def dump_extract(edits, out_file, start, end):
-    json.dump(edits[start:(end+1)], open(out_file, "w"), indent=2)
+    json.dump(edits[start : (end + 1)], open(out_file, "w"), indent=2)
     logging.info("dumped to %s" % out_file)
-    
+
 
 def compute_final_state(test_dump_file):
     global doc_lines
     doc_lines = []
     edits = json.load(open(test_dump_file))
-    #dump_extract(edits, "log.json", 0, 39)
+    # dump_extract(edits, "log.json", 0, 39)
     for edit_num, raw_edit in enumerate(edits):
         edit = json.loads(raw_edit)
         apply_doc_edit(edit["contents"])
-        #if edit_num == 5:
+        # if edit_num == 5:
         #    break
-        #sleep(0.2)
+        # sleep(0.2)
     # add a final newline, always, to match other editors
     return "\n".join(doc_lines) + "\n"

@@ -22,11 +22,9 @@ def init_flask():
     app_init.config["SECRET_KEY"] = ss["session_key"]
 
     app_init.config["SESSION_TYPE"] = "redis"
-    Session(app_init)    # Start the web session
+    Session(app_init)  # Start the web session
 
     return app_init
-
-
 
 
 # wsgi (in uwsgi) workaround for "application":
@@ -42,8 +40,7 @@ def home():
 app.add_url_rule("/login", view_func=discordutil.discord_login)
 app.add_url_rule("/api/ident/cb", view_func=discordutil.discord_login_cb)
 app.add_url_rule("/logintwitch", view_func=twitchutil.twitch_login)
-app.add_url_rule("/api/ident/twitchcb",
-    view_func=twitchutil.twitch_login_cb)
+app.add_url_rule("/api/ident/twitchcb", view_func=twitchutil.twitch_login_cb)
 
 
 @app.route("/logout")
@@ -69,7 +66,7 @@ def get_profile():
         result = {
             "full_username": discord["full_username"],
             "avatar_url": discord["avatar_url"],
-            "id": discord["id"]
+            "id": discord["id"],
         }
     return result
 
@@ -78,11 +75,15 @@ def get_profile():
 def user_home():
     if is_authorized():
         # TODO: send users that have discord but are not authorized to signup
-        return render_template("userhome.html",
-                               wsurl=config.MY_WS_URL, profile=get_profile(),
-                               lenv={
-                                   "extension": config.CODE_EXTENSION,
-                                   "wbrefresh": config.WHITEBOARD_REFRESH_MS})
+        return render_template(
+            "userhome.html",
+            wsurl=config.MY_WS_URL,
+            profile=get_profile(),
+            lenv={
+                "extension": config.CODE_EXTENSION,
+                "wbrefresh": config.WHITEBOARD_REFRESH_MS,
+            },
+        )
     else:
         abort(401)
 
@@ -90,7 +91,7 @@ def user_home():
 # TODO: add session specifics to this
 # TODO: auth this before using a push notification
 # TODO: tell web clients to reload the board if it changed
-@app.route("/wb", methods=['GET', 'POST'])
+@app.route("/wb", methods=["GET", "POST"])
 def whiteboard_update():
     if request.method == "GET":
         # TODO: allow other image types
@@ -111,7 +112,4 @@ def custom_401(_):
 
 
 if __name__ == "__main__":
-    app.run(
-        debug=True,
-        host="0.0.0.0",
-        port=config.MY_WEB_PORT)
+    app.run(debug=True, host="0.0.0.0", port=config.MY_WEB_PORT)

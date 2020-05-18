@@ -42,8 +42,8 @@ def executor(text):
     # assume we're in the same directory
     cmd = cmd_pattern % (config.CODE_DIR, temp_filepart)
     sub_pipe = subprocess.Popen(
-        cmd, shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     sub_pipe_stdout, sub_pipe_stderr = sub_pipe.communicate()
 
     stdout = sub_pipe_stdout.decode(config.HOST_ENCODING)
