@@ -1,6 +1,11 @@
 """editorstate tests vs. finalstate text files"""
 
 import os
+
+# TODO: remove the path hack (did the needful :( )
+import sys
+sys.path.append(os.path.join(os.path.abspath("."), "src", "multiuserpad"))
+
 from glob import glob
 
 import pytest
