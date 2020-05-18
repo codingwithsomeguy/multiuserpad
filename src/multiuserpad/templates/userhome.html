@@ -15,6 +15,8 @@
 <script src="/static/mode/python/python.js"></script>
 <script src="/static/mode/javascript/javascript.js"></script>
 
+<script src="/static/md5.js"></script>
+
 <!-- Local styles -->
 <link rel="stylesheet" href="/static/mup.css">
 
@@ -79,6 +81,7 @@ function init() {
 function doLoadMessage(messageBody) {
     editor.off("change", handleChange);
     editor.setValue(messageBody);
+    lastMd5 = md5(editor.getValue());
     editor.on("change", handleChange);
 }
 
@@ -260,6 +263,7 @@ function handleWsMessage(evt) {
             // deselect (jump to cursor) before applying
             editor.setSelection(currentPosition);
             editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
+            lastMd5 = md5(editor.getValue());
             editor.on("change", handleChange);
             editor.on("beforeSelectionChange", handleChangeSelection);
         } else if (message["action"] === "selection") {
@@ -287,14 +291,18 @@ function handleWsMessage(evt) {
     }
 }
 
+let lastMd5 = "";
 function handleChange(editorInstance, changeObj) {
+    // need the editor value _before_ the change
     // TODO: make sure the websocket is REALLY open first...
     var messageObj = {
         "action": "edit",
-        "contents": changeObj
+        "contents": changeObj,
+        "md5": lastMd5,
     };
     const message = JSON.stringify(messageObj);
     ws.send(message);
+    lastMd5 = md5(editor.getValue());
 }
 
 function arePositionsEqual(p1, p2) {

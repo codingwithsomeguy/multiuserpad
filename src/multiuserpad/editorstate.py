@@ -1,5 +1,6 @@
 import json
 from time import sleep
+from hashlib import md5
 import logging
 from cmedit import cmedit
 
@@ -142,10 +143,21 @@ def edit_non_last_line(edit):
         raise EditorStateException("unimplemented: " + str(edit))
 
 
-def apply_doc_edit(rawedit):
+# returns boolean True if edit was accepted
+def apply_doc_edit(rawedit, client_md5_hash):
     global apply_doc_edit_calls, doc_lines
     apply_doc_edit_calls += 1
     logging.info("Doc state change [%d]: %s" % (apply_doc_edit_calls, str(rawedit)))
+
+    if client_md5_hash != "" and client_md5_hash is not None:
+        server_md5_hash = md5(get_document_state().encode()).hexdigest()
+        if client_md5_hash != server_md5_hash:
+            logging.info(
+                "  rejecting edit, mismatched md5, client: %s, server: %s"
+                % (client_md5_hash, server_md5_hash)
+            )
+            return
+
     logging.info("  before change: %s" % json.dumps(doc_lines))
 
     edit = cmedit(rawedit)
@@ -162,6 +174,8 @@ def apply_doc_edit(rawedit):
     logging.info("  after change: %s" % json.dumps(doc_lines))
     logging.info("")
 
+    return True
+
 
 # test code / test utilities
 # TODO: put elsewhere
@@ -177,7 +191,7 @@ def compute_final_state(test_dump_file):
     # dump_extract(edits, "log.json", 0, 39)
     for edit_num, raw_edit in enumerate(edits):
         edit = json.loads(raw_edit)
-        apply_doc_edit(edit["contents"])
+        apply_doc_edit(edit["contents"], None)
         # if edit_num == 5:
         #    break
         # sleep(0.2)

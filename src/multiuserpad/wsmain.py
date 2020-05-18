@@ -29,24 +29,27 @@ def get_edit_contents(message):
     result = None
     try:
         parsed = json.loads(message)
-        if "contents" in parsed:
-            result = parsed["contents"]
+        if "contents" in parsed and "md5" in parsed:
+            result = parsed["contents"], parsed["md5"]
     except json.decoder.JSONDecodeError:
         pass
     return result
 
 
 def add_replay(message):
+    result = True
     if config.ENABLE_REPLAY == True:
+        result = False
         all_actions.append(message)
-        parsed = get_edit_contents(message)
+        parsed, md5 = get_edit_contents(message)
         if parsed is not None:
             try:
-                apply_doc_edit(parsed)
+                result = apply_doc_edit(parsed, md5)
             except Exception as e:
                 # TODO: don't catch Exception
-                print("Caught Exception from apply_doc_edit")
-                print(e)
+                logging.info("Caught Exception from apply_doc_edit")
+                logging.info(e)
+    return result
 
 
 def get_all_replay():
@@ -99,9 +102,15 @@ async def handle_websocket(websocket, path):
             if "action" in message:
                 if message["action"] == "edit":
                     # TODO: add client_id
-                    add_replay(raw_message)
-                    # TODO: use real connection ids instead of comparing to ws
-                    await send_all(raw_message, websocket)
+                    result = add_replay(raw_message)
+                    logging.info("add_replay result was" + str(result))
+                    if result is not True:
+                        # Just send a new load back
+                        # TODO: this causes a cursor reset
+                        await websocket.send(marshal_load_response())
+                    else:
+                        # TODO: use real connection ids instead of comparing to ws
+                        await send_all(raw_message, websocket)
                 elif message["action"] == "replay":
                     await websocket.send(get_all_replay())
                 elif message["action"] == "load":
