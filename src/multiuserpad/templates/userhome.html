@@ -113,8 +113,10 @@ function doClearOutput(evt) {
 }
 
 function doExecute() {
+    const clientHash = md5(editor.getValue());
     const messageObj = {
         "action": "execute",
+        "md5": clientHash
     };
     ws.send(JSON.stringify(messageObj));
 }

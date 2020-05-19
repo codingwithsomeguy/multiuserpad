@@ -4,7 +4,7 @@ import json
 from config import config
 import logging
 
-from editorstate import apply_doc_edit, get_document_state
+from editorstate import apply_doc_edit, get_document_state, get_document_md5
 from runtime import executor
 
 
@@ -26,7 +26,7 @@ async def send_all(message, ws_to_avoid=None):
 
 
 def get_edit_contents(message):
-    result = None
+    result = None, None
     try:
         parsed = json.loads(message)
         if "contents" in parsed and "md5" in parsed:
@@ -41,10 +41,10 @@ def add_replay(message):
     if config.ENABLE_REPLAY == True:
         result = False
         all_actions.append(message)
-        parsed, md5 = get_edit_contents(message)
+        parsed, client_md5 = get_edit_contents(message)
         if parsed is not None:
             try:
-                result = apply_doc_edit(parsed, md5)
+                result = apply_doc_edit(parsed, client_md5)
             except Exception as e:
                 # TODO: don't catch Exception
                 logging.info("Caught Exception from apply_doc_edit")
@@ -116,8 +116,12 @@ async def handle_websocket(websocket, path):
                 elif message["action"] == "load":
                     await websocket.send(marshal_load_response())
                 elif message["action"] == "execute":
-                    execution_response = marshal_execution_response()
-                    await send_all(execution_response)
+                    if "md5" in message and message["md5"] == get_document_md5():
+                        execution_response = marshal_execution_response()
+                        await send_all(execution_response)
+                    else:
+                        logging.info("missing/bad hash, doing reload")
+                        await websocket.send(marshal_load_response())
                 elif message["action"] in actions_for_all_else:
                     await send_all(raw_message, websocket)
                 elif message["action"] == "dump":

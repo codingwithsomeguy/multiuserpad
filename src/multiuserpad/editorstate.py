@@ -21,6 +21,10 @@ def get_document_state():
     return "\n".join(doc_lines)
 
 
+def get_document_md5():
+    return md5(get_document_state().encode()).hexdigest()
+
+
 def edit_last_line(edit):
     global doc_lines
     # appending the last line:
@@ -150,7 +154,7 @@ def apply_doc_edit(rawedit, client_md5_hash):
     logging.info("Doc state change [%d]: %s" % (apply_doc_edit_calls, str(rawedit)))
 
     if client_md5_hash != "" and client_md5_hash is not None:
-        server_md5_hash = md5(get_document_state().encode()).hexdigest()
+        server_md5_hash = get_document_md5()
         if client_md5_hash != server_md5_hash:
             logging.info(
                 "  rejecting edit, mismatched md5, client: %s, server: %s"
