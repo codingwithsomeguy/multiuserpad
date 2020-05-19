@@ -79,10 +79,18 @@ function init() {
 
 <script>
 function doLoadMessage(messageBody) {
+    editor.off("beforeSelectionChange", handleChangeSelection);
     editor.off("change", handleChange);
+    editor.off("beforeChange", handleBeforeChange);
+    const lastCursorPos = editor.getCursor();
     editor.setValue(messageBody);
-    lastMd5 = md5(editor.getValue());
+    // impossible cursor positions are ok (repl testing)
+    editor.setCursor(lastCursorPos);
+    // faster than popping all the elements from a constant array:
+    changeHashes.length = 0;
+    editor.on("beforeChange", handleBeforeChange);
     editor.on("change", handleChange);
+    editor.on("beforeSelectionChange", handleChangeSelection);
 }
 
 function addOutputLine(src, prefix="> ") {
@@ -245,6 +253,7 @@ const editor = CodeMirror.fromTextArea(padElem, getInitialEditorSettings());
 editor.setSize(75 * 10 + 22 + 70, "100%");
 editor.on("change", handleChange);
 editor.on("beforeSelectionChange", handleChangeSelection);
+editor.on("beforeChange", handleBeforeChange);
 
 function handleWsMessage(evt) {
     //console.log(evt);
@@ -260,10 +269,11 @@ function handleWsMessage(evt) {
             const currentPosition = editor.getCursor();
             editor.off("beforeSelectionChange", handleChangeSelection);
             editor.off("change", handleChange);
+            editor.off("beforeChange", handleBeforeChange);
             // deselect (jump to cursor) before applying
             editor.setSelection(currentPosition);
             editor.replaceRange(changeObj.text.join("\n"), changeObj.from, changeObj.to);
-            lastMd5 = md5(editor.getValue());
+            editor.on("beforeChange", handleBeforeChange);
             editor.on("change", handleChange);
             editor.on("beforeSelectionChange", handleChangeSelection);
         } else if (message["action"] === "selection") {
@@ -291,18 +301,33 @@ function handleWsMessage(evt) {
     }
 }
 
-let lastMd5 = "";
+const changeHashes = [];
+function handleBeforeChange(instance, changeObj) {
+    /*
+     * autoindents (and probably all electricInputs) cause multiple
+     *  beforeChange events to fire before change events.
+     *  This makes calculating editor state at change events hard for
+     *  things like a hash of the editor contents.
+     * Current workaround - keep a FIFO of these in changeHashes
+     */
+
+    // TODO: consider only doing this on origin == "+input" events
+    if ("origin" in changeObj && changeObj["origin"] != "setValue") {
+        const text = editor.getValue();
+        changeHashes.push(md5(text));
+    }
+}
+
 function handleChange(editorInstance, changeObj) {
     // need the editor value _before_ the change
     // TODO: make sure the websocket is REALLY open first...
     var messageObj = {
         "action": "edit",
         "contents": changeObj,
-        "md5": lastMd5,
+        "md5": changeHashes.shift(),
     };
     const message = JSON.stringify(messageObj);
     ws.send(message);
-    lastMd5 = md5(editor.getValue());
 }
 
 function arePositionsEqual(p1, p2) {

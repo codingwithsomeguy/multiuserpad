@@ -172,7 +172,6 @@ def apply_doc_edit(rawedit, client_md5_hash):
         edit_non_last_line(edit)
 
     logging.info("  after change: %s" % json.dumps(doc_lines))
-    logging.info("")
 
     return True
 

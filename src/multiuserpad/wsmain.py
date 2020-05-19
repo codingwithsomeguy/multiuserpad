@@ -103,7 +103,7 @@ async def handle_websocket(websocket, path):
                 if message["action"] == "edit":
                     # TODO: add client_id
                     result = add_replay(raw_message)
-                    logging.info("add_replay result was" + str(result))
+                    logging.info("add_replay result was %s\n", str(result))
                     if result is not True:
                         # Just send a new load back
                         # TODO: this causes a cursor reset
