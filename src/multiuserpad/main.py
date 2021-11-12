@@ -188,7 +188,7 @@ def whiteboard_update():
 
 @app.errorhandler(401)
 def custom_401(_):
-    return render_template("401.html")
+    return render_template("401.html"), 401
 
 
 if __name__ == "__main__":
